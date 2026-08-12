@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Results Generator</title>
     <style>
+        /* =========================================
+           Načtení tvého vlastního fontu ze serveru
+           ========================================= */
+        @font-face {
+            font-family: 'CustomAgency';
+            src: url('font.ttf') format('truetype');
+        }
+
         :root {
             --bg-color: #121212;
             --card-bg: #1e1e1e;
@@ -22,6 +30,14 @@
             display: flex;
             justify-content: center;
         }
+        
+        /* Skrytý element, který donutí prohlížeč načíst font hned po startu */
+        .preload-font {
+            font-family: 'CustomAgency';
+            position: absolute;
+            visibility: hidden;
+        }
+
         .container {
             background-color: var(--card-bg);
             padding: 30px;
@@ -157,12 +173,13 @@
     </style>
 </head>
 <body>
+    
+    <div class="preload-font">Font Preload</div>
 
     <div class="container">
         <h1>Results Generator</h1>
         
-        <!-- Tento rámeček ti potvrdí, jaká čísla web skutečně čte -->
-        <div class="debug-panel" id="config-display">Načítám aktuální CONFIG...</div>
+        <div class="debug-panel" id="config-display">Loading config...</div>
         
         <div class="form-group">
             <label class="section-title">1. Header Texts</label>
@@ -210,36 +227,29 @@
         // CONFIGURATION (Set once and forget)
         // ==========================================
         const CONFIG = {
-            // Global side crops
             cropLeft: 600,       
             cropRight: 400,      
 
-            // First Screenshot (Header & First rows)
             firstScreenCropTop: 240,    
-            firstScreenCropBottom: 10,   
+            firstScreenCropBottom: 15,   
 
-            // Additional Screenshots (Continuing rows)
             otherScreenCropTop: 660,    
             otherScreenCropBottom: 0,   
             
-            // Úplně poslední screenshot v řadě (Pro odstranění 21. hráče)
-            lastScreenCropBottom: 140,  
+            lastScreenCropBottom: 115,  
 
-            // Text Placement 
             dateTextY: 120,          
             trackTextY: 250,         
 
-            // Logo Details
             logoX: 25,
-            logoY: 65,
+            logoY: 60,
             logoSize: 300
         };
         // ==========================================
 
-        // Zobrazení CONFIGu na obrazovce pro kontrolu
         window.onload = function() {
             document.getElementById('config-display').innerHTML = 
-                "LATEST CONFIGURATION :<br><br>" + 
+                "LATEST CONFIGURATION:<br><br>" + 
                 JSON.stringify(CONFIG, null, 2).replace(/\n/g, '<br>').replace(/ /g, '&nbsp;');
         };
 
@@ -289,6 +299,9 @@
             dlBtn.disabled = true;
 
             try {
+                // Počkáme, dokud prohlížeč plně nenačte tvůj nahraný ttf font
+                await document.fonts.ready;
+
                 const dateText = document.getElementById('dateText').value;
                 const trackText = document.getElementById('trackText').value;
                 const firstScreenFile = document.getElementById('firstScreen').files[0];
@@ -303,7 +316,6 @@
                     otherImgs.push(await loadImage(file));
                 }
                 
-                // Využití pevného CONFIGu
                 const targetWidth = firstImg.width - CONFIG.cropLeft - CONFIG.cropRight;
                 const firstScreenHeight = firstImg.height - CONFIG.firstScreenCropTop - CONFIG.firstScreenCropBottom;
                 
@@ -311,7 +323,6 @@
                 const otherHeights = [];
                 
                 for (let i = 0; i < otherImgs.length; i++) {
-                    // Logika pro odříznutí posledního řádku pouze z posledního screenshotu
                     let currentBottomCrop = CONFIG.otherScreenCropBottom;
                     if (i === otherImgs.length - 1) {
                         currentBottomCrop = CONFIG.lastScreenCropBottom;
@@ -327,19 +338,16 @@
                 canvas.height = totalHeight;
                 const ctx = canvas.getContext('2d');
 
-                // Vykreslení prvního screenu
                 ctx.drawImage(
                     firstImg, 
                     CONFIG.cropLeft, CONFIG.firstScreenCropTop, targetWidth, firstScreenHeight,
                     0, 0, targetWidth, firstScreenHeight
                 );
 
-                // Logo
                 if (logoImg) {
                     ctx.drawImage(logoImg, CONFIG.logoX, CONFIG.logoY, CONFIG.logoSize, CONFIG.logoSize);
                 }
 
-                // Text
                 ctx.textAlign = "center";
                 ctx.lineJoin = "round";
                 ctx.lineWidth = 36; 
@@ -348,25 +356,24 @@
 
                 const centerX = targetWidth / 2;
 
+                // Nastavení na tvůj Custom font nahraný na GitHubu
                 if (dateText) {
-                    ctx.font = "900 130px 'Arial Black', Impact, sans-serif";
+                    ctx.font = "140px 'CustomAgency', Arial, sans-serif";
                     ctx.strokeText(dateText, centerX, CONFIG.dateTextY);
                     ctx.fillText(dateText, centerX, CONFIG.dateTextY);
                 }
 
                 if (trackText) {
-                    ctx.font = "900 120px 'Arial Black', Impact, sans-serif";
+                    ctx.font = "120px 'CustomAgency', Arial, sans-serif";
                     ctx.strokeText(trackText, centerX, CONFIG.trackTextY);
                     ctx.fillText(trackText, centerX, CONFIG.trackTextY);
                 }
 
-                // Vykreslení dalších screenů
                 let currentY = firstScreenHeight;
                 for (let i = 0; i < otherImgs.length; i++) {
                     const img = otherImgs[i];
                     const h = otherHeights[i];
                     
-                    // Nastavení správného ořezu zespodu
                     let currentBottomCrop = CONFIG.otherScreenCropBottom;
                     if (i === otherImgs.length - 1) {
                         currentBottomCrop = CONFIG.lastScreenCropBottom;
