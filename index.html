@@ -229,7 +229,7 @@
 
             // Logo Details
             logoX: 30,
-            logoY: 35,
+            logoY: 45,
             logoSize: 300
         };
         // ==========================================
@@ -342,13 +342,13 @@
                 const centerX = targetWidth / 2;
 
                 if (dateText) {
-                    ctx.font = "140px 'Lilita One', sans-serif";
+                    ctx.font = "bold 140px 'Lilita One', sans-serif";
                     ctx.strokeText(dateText, centerX, CONFIG.dateTextY);
                     ctx.fillText(dateText, centerX, CONFIG.dateTextY);
                 }
 
                 if (trackText) {
-                    ctx.font = "110px 'Lilita One', sans-serif";
+                    ctx.font = "bold 110px 'Lilita One', sans-serif";
                     ctx.strokeText(trackText, centerX, CONFIG.trackTextY);
                     ctx.fillText(trackText, centerX, CONFIG.trackTextY);
                 }
