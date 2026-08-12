@@ -212,8 +212,8 @@
         // ==========================================
         const CONFIG = {
             // Global side crops
-            cropLeft: 800,       
-            cropRight: 600,      
+            cropLeft: 600,       
+            cropRight: 400,      
 
             // First Screenshot (Header & First rows)
             firstScreenCropTop: 240,    
@@ -225,7 +225,7 @@
 
             // Text Placement 
             dateTextY: 120,          
-            trackTextY: 230,         
+            trackTextY: 250,         
 
             // Logo Details
             logoX: 30,
@@ -237,7 +237,7 @@
         // Zobrazení CONFIGu na obrazovce pro kontrolu
         window.onload = function() {
             document.getElementById('config-display').innerHTML = 
-                "⚠️ AKTUALNÍ CONFIG (pokud měníš kód a čísla zde se nemění, prohlížeč tahá data z cache):<br><br>" + 
+                "LATEST CONFIGURATION :<br><br>" + 
                 JSON.stringify(CONFIG, null, 2).replace(/\n/g, '<br>').replace(/ /g, '&nbsp;');
         };
 
