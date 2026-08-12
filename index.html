@@ -221,6 +221,9 @@
             // Additional Screenshots (Continuing rows)
             otherScreenCropTop: 660,    
             otherScreenCropBottom: 0,   
+            
+            // Úplně poslední screenshot v řadě (Pro odstranění 21. hráče)
+            lastScreenCropBottom: 115,  
 
             // Text Placement 
             dateTextY: 120,          
@@ -308,7 +311,13 @@
                 const otherHeights = [];
                 
                 for (let i = 0; i < otherImgs.length; i++) {
-                    const h = otherImgs[i].height - CONFIG.otherScreenCropTop - CONFIG.otherScreenCropBottom;
+                    // Logika pro odříznutí posledního řádku pouze z posledního screenshotu
+                    let currentBottomCrop = CONFIG.otherScreenCropBottom;
+                    if (i === otherImgs.length - 1) {
+                        currentBottomCrop = CONFIG.lastScreenCropBottom;
+                    }
+                    
+                    const h = otherImgs[i].height - CONFIG.otherScreenCropTop - currentBottomCrop;
                     otherHeights.push(h);
                     totalHeight += h;
                 }
@@ -330,10 +339,10 @@
                     ctx.drawImage(logoImg, CONFIG.logoX, CONFIG.logoY, CONFIG.logoSize, CONFIG.logoSize);
                 }
 
-                // Text styling - aktualizováno na Arial Black styl
+                // Text
                 ctx.textAlign = "center";
                 ctx.lineJoin = "round";
-                ctx.lineWidth = 36; // Extra silný obrys
+                ctx.lineWidth = 36; 
                 ctx.strokeStyle = "black";
                 ctx.fillStyle = "white";
 
@@ -356,6 +365,13 @@
                 for (let i = 0; i < otherImgs.length; i++) {
                     const img = otherImgs[i];
                     const h = otherHeights[i];
+                    
+                    // Nastavení správného ořezu zespodu
+                    let currentBottomCrop = CONFIG.otherScreenCropBottom;
+                    if (i === otherImgs.length - 1) {
+                        currentBottomCrop = CONFIG.lastScreenCropBottom;
+                    }
+
                     ctx.drawImage(
                         img, 
                         CONFIG.cropLeft, CONFIG.otherScreenCropTop, targetWidth, h,
