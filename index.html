@@ -39,6 +39,17 @@
             font-weight: 800;
             text-transform: uppercase;
         }
+        .debug-panel {
+            background-color: #000;
+            border: 1px solid #0f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            font-size: 13px;
+            color: #0f0;
+            text-align: left;
+        }
         .form-group {
             margin-bottom: 20px;
             padding: 15px;
@@ -151,6 +162,9 @@
     <div class="container">
         <h1>Results Generator</h1>
         
+        <!-- Tento rámeček ti potvrdí, jaká čísla web skutečně čte -->
+        <div class="debug-panel" id="config-display">Načítám aktuální CONFIG...</div>
+        
         <div class="form-group">
             <label class="section-title">1. Header Texts</label>
             <input type="text" id="dateText" placeholder="Event Date (e.g. 11th August 2026)">
@@ -198,8 +212,8 @@
         // ==========================================
         const CONFIG = {
             // Global side crops
-            cropLeft: 700,       
-            cropRight: 400,      
+            cropLeft: 900,       
+            cropRight: 600,      
 
             // First Screenshot (Header & First rows)
             firstScreenCropTop: 240,    
@@ -210,8 +224,8 @@
             otherScreenCropBottom: 0,   
 
             // Text Placement 
-            dateTextY: 70,          
-            trackTextY: 90,         
+            dateTextY: 90,          
+            trackTextY: 210,         
 
             // Logo Details
             logoX: 30,
@@ -219,6 +233,13 @@
             logoSize: 300
         };
         // ==========================================
+
+        // Zobrazení CONFIGu na obrazovce pro kontrolu
+        window.onload = function() {
+            document.getElementById('config-display').innerHTML = 
+                "⚠️ AKTUALNÍ CONFIG (pokud měníš kód a čísla zde se nemění, prohlížeč tahá data z cache):<br><br>" + 
+                JSON.stringify(CONFIG, null, 2).replace(/\n/g, '<br>').replace(/ /g, '&nbsp;');
+        };
 
         let finalImageURL = "";
 
