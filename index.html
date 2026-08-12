@@ -194,25 +194,24 @@
 
     <script>
         // ==========================================
-        // CONFIGURATION (MANUAL TWEAKS)
-        // Set how many pixels to cut off from each side
+        // CONFIGURATION (Set once and forget)
         // ==========================================
         const CONFIG = {
-            // Global side crops (applies to all screenshots)
-            cropLeft: 600,       // Pixels to remove from the LEFT
-            cropRight: 400,      // Pixels to remove from the RIGHT
+            // Global side crops
+            cropLeft: 900,       
+            cropRight: 600,      
 
             // First Screenshot (Header & First rows)
-            firstScreenCropTop: 240,    // Pixels to remove from the TOP
-            firstScreenCropBottom: 20,   // Pixels to remove from the BOTTOM
+            firstScreenCropTop: 240,    
+            firstScreenCropBottom: 0,   
 
             // Additional Screenshots (Continuing rows)
-            otherScreenCropTop: 640,    // Pixels to remove from the TOP
-            otherScreenCropBottom: 0,   // Pixels to remove from the BOTTOM
+            otherScreenCropTop: 660,    
+            otherScreenCropBottom: 0,   
 
-            // Text Placement (Vertical position from the top of the final image)
-            dateTextY: 85,          
-            trackTextY: 205,         
+            // Text Placement 
+            dateTextY: 90,          
+            trackTextY: 210,         
 
             // Logo Details
             logoX: 30,
@@ -281,7 +280,7 @@
                     otherImgs.push(await loadImage(file));
                 }
                 
-                // Calculate dimensions based on the crops
+                // Využití pevného CONFIGu
                 const targetWidth = firstImg.width - CONFIG.cropLeft - CONFIG.cropRight;
                 const firstScreenHeight = firstImg.height - CONFIG.firstScreenCropTop - CONFIG.firstScreenCropBottom;
                 
@@ -299,19 +298,19 @@
                 canvas.height = totalHeight;
                 const ctx = canvas.getContext('2d');
 
-                // Draw first screen
+                // Vykreslení prvního screenu
                 ctx.drawImage(
                     firstImg, 
-                    CONFIG.cropLeft, CONFIG.firstScreenCropTop, targetWidth, firstScreenHeight, // Source
-                    0, 0, targetWidth, firstScreenHeight // Destination
+                    CONFIG.cropLeft, CONFIG.firstScreenCropTop, targetWidth, firstScreenHeight,
+                    0, 0, targetWidth, firstScreenHeight
                 );
 
-                // Draw logo
+                // Logo
                 if (logoImg) {
                     ctx.drawImage(logoImg, CONFIG.logoX, CONFIG.logoY, CONFIG.logoSize, CONFIG.logoSize);
                 }
 
-                // Text styling
+                // Text
                 ctx.textAlign = "center";
                 ctx.lineJoin = "round";
                 ctx.miterLimit = 2;
@@ -333,15 +332,15 @@
                     ctx.fillText(trackText, centerX, CONFIG.trackTextY);
                 }
 
-                // Draw other screens
+                // Vykreslení dalších screenů
                 let currentY = firstScreenHeight;
                 for (let i = 0; i < otherImgs.length; i++) {
                     const img = otherImgs[i];
                     const h = otherHeights[i];
                     ctx.drawImage(
                         img, 
-                        CONFIG.cropLeft, CONFIG.otherScreenCropTop, targetWidth, h, // Source
-                        0, currentY, targetWidth, h // Destination
+                        CONFIG.cropLeft, CONFIG.otherScreenCropTop, targetWidth, h,
+                        0, currentY, targetWidth, h
                     );
                     currentY += h;
                 }
@@ -366,7 +365,6 @@
             if (!finalImageURL) return;
 
             const trackText = document.getElementById('trackText').value.trim();
-            
             let safeName = trackText.replace(/[^a-zA-Z0-9]/g, '');
             if (!safeName) safeName = 'Event';
             
