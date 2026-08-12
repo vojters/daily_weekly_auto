@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --primary: #f5b041;
+            --primary-hover: #d49632;
+            --text-main: #ffffff;
+            --text-muted: #aaaaaa;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 600px;
+        }
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #252525;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--primary);
+            text-transform: uppercase;
+        }
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background-color: #1a1a1a;
+            color: white;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        input[type="text"] {
+            margin-bottom: 10px;
+        }
+        input[type="text"]:last-child {
+            margin-bottom: 0;
+        }
+        button {
+            width: 100%;
+            padding: 16px;
+            background-color: var(--primary);
+            color: #121212;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-transform: uppercase;
+            margin-top: 15px;
+        }
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+        .status {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            min-height: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Results Generator</h1>
+        
+        <div class="form-group">
+            <label>1. Header Texts</label>
+            <input type="text" id="dateText" placeholder="Event Date (e.g. 11th August 2026)">
+            <input type="text" id="trackText" placeholder="Track Name (e.g. The Dunes)">
+        </div>
+
+        <div class="form-group">
+            <label>2. Main Screenshot (Creates Header)</label>
+            <input type="file" id="firstScreen" accept="image/*">
+        </div>
+
+        <div class="form-group">
+            <label>3. Additional Screenshots (Extends Table)</label>
+            <input type="file" id="otherScreens" accept="image/*" multiple>
+        </div>
+
+        <button id="generateBtn" onclick="generateCollage()">GENERATE COLLAGE</button>
+        <div id="statusMsg" class="status"></div>
+    </div>
+
+    <script>
+        function loadImage(file) {
+            return new Promise((resolve, reject) => {
+                if (!file) { resolve(null); return; }
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        function loadRepoLogo() {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = () => resolve(null);
+                img.src = 'logo.png';
+            });
+        }
+
+        async function generateCollage() {
+            const statusMsg = document.getElementById('statusMsg');
+            const btn = document.getElementById('generateBtn');
+            statusMsg.style.color = '#aaaaaa';
+            statusMsg.innerText = 'Processing...';
+            btn.disabled = true;
+
+            try {
+                const dateText = document.getElementById('dateText').value;
+                const trackText = document.getElementById('trackText').value;
+                const firstScreenFile = document.getElementById('firstScreen').files[0];
+                const otherScreenFiles = Array.from(document.getElementById('otherScreens').files);
+
+                if (!firstScreenFile) throw new Error("Main screenshot is required.");
+
+                const firstImg = await loadImage(firstScreenFile);
+                const logoImg = await loadRepoLogo();
+                const otherImgs = [];
+                for (let file of otherScreenFiles) {
+                    otherImgs.push(await loadImage(file));
+                }
+
+                const cropLeft = 180;
+                const cropRight = 220;
+                const targetWidth = firstImg.width - cropLeft - cropRight;
+                
+                const yStartFirst = 130;
+                const yStartOther = 445;
+
+                const firstImgHeight = firstImg.height - yStartFirst;
+                let totalHeight = firstImgHeight;
+
+                const otherImgHeights = otherImgs.map(img => img.height - yStartOther);
+                totalHeight += otherImgHeights.reduce((a, b) => a + b, 0);
+
+                const canvas = document.createElement('canvas');
+                canvas.width = targetWidth;
+                canvas.height = totalHeight;
+                const ctx = canvas.getContext('2d');
+
+                ctx.drawImage(firstImg, cropLeft, yStartFirst, targetWidth, firstImgHeight, 0, 0, targetWidth, firstImgHeight);
+
+                if (logoImg) {
+                    const logoSize = 190;
+                    ctx.drawImage(logoImg, 15, 10, logoSize, logoSize);
+                }
+
+                ctx.textAlign = "center";
+                ctx.lineJoin = "round";
+                ctx.miterLimit = 2;
+                ctx.lineWidth = 14; 
+                ctx.strokeStyle = "black";
+                ctx.fillStyle = "white";
+
+                const centerX = targetWidth / 2;
+
+                if (dateText) {
+                    ctx.font = "70px 'Lilita One', sans-serif";
+                    ctx.strokeText(dateText, centerX, 85);
+                    ctx.fillText(dateText, centerX, 85);
+                }
+
+                if (trackText) {
+                    ctx.font = "60px 'Lilita One', sans-serif";
+                    ctx.strokeText(trackText, centerX, 165);
+                    ctx.fillText(trackText, centerX, 165);
+                }
+
+                let currentY = firstImgHeight;
+                for (let i = 0; i < otherImgs.length; i++) {
+                    const img = otherImgs[i];
+                    const h = otherImgHeights[i];
+                    ctx.drawImage(img, cropLeft, yStartOther, targetWidth, h, 0, currentY, targetWidth, h);
+                    currentY += h;
+                }
+
+                const link = document.createElement('a');
+                link.download = `Results_Collage.jpg`;
+                link.href = canvas.toDataURL('image/jpeg', 0.95);
+                link.click();
+
+                statusMsg.style.color = '#4CAF50';
+                statusMsg.innerText = 'Success.';
+
+            } catch (error) {
+                statusMsg.style.color = '#f44336';
+                statusMsg.innerText = error.message;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
+
