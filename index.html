@@ -234,8 +234,10 @@
             firstScreenCropBottom: 20,   
 
             otherScreenCropTop: 630,    
-            otherScreenCropBottom: 15,   
+            otherScreenCropBottom: 0,   
             
+            // Speciální ořezy pouze pro úplně poslední screenshot v řadě
+            lastScreenCropTop: 640,     
             lastScreenCropBottom: 115,  
 
             dateTextY: 120,          
@@ -323,12 +325,15 @@
                 const otherHeights = [];
                 
                 for (let i = 0; i < otherImgs.length; i++) {
+                    let currentTopCrop = CONFIG.otherScreenCropTop;
                     let currentBottomCrop = CONFIG.otherScreenCropBottom;
+                    
                     if (i === otherImgs.length - 1) {
+                        currentTopCrop = CONFIG.lastScreenCropTop;
                         currentBottomCrop = CONFIG.lastScreenCropBottom;
                     }
                     
-                    const h = otherImgs[i].height - CONFIG.otherScreenCropTop - currentBottomCrop;
+                    const h = otherImgs[i].height - currentTopCrop - currentBottomCrop;
                     otherHeights.push(h);
                     totalHeight += h;
                 }
@@ -374,14 +379,17 @@
                     const img = otherImgs[i];
                     const h = otherHeights[i];
                     
+                    let currentTopCrop = CONFIG.otherScreenCropTop;
                     let currentBottomCrop = CONFIG.otherScreenCropBottom;
+                    
                     if (i === otherImgs.length - 1) {
+                        currentTopCrop = CONFIG.lastScreenCropTop;
                         currentBottomCrop = CONFIG.lastScreenCropBottom;
                     }
 
                     ctx.drawImage(
                         img, 
-                        CONFIG.cropLeft, CONFIG.otherScreenCropTop, targetWidth, h,
+                        CONFIG.cropLeft, currentTopCrop, targetWidth, h,
                         0, currentY, targetWidth, h
                     );
                     currentY += h;
