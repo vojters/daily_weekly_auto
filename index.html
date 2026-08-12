@@ -46,7 +46,7 @@
             border-radius: 8px;
             border-left: 4px solid var(--primary);
         }
-        label {
+        label.section-title {
             display: block;
             margin-bottom: 10px;
             font-weight: 600;
@@ -54,7 +54,7 @@
             color: var(--primary);
             text-transform: uppercase;
         }
-        input[type="text"], input[type="file"] {
+        input[type="text"] {
             width: 100%;
             padding: 12px;
             border-radius: 6px;
@@ -63,14 +63,46 @@
             color: white;
             box-sizing: border-box;
             font-size: 14px;
-        }
-        input[type="text"] {
             margin-bottom: 10px;
         }
         input[type="text"]:last-child {
             margin-bottom: 0;
         }
-        button {
+        
+        input[type="file"] {
+            display: none;
+        }
+        .file-upload-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .custom-file-upload {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: #333;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: 0.2s;
+            border: 1px solid #555;
+            text-transform: uppercase;
+        }
+        .custom-file-upload:hover {
+            background-color: #444;
+        }
+        .file-name {
+            font-size: 13px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 250px;
+        }
+
+        button.main-btn {
             width: 100%;
             padding: 16px;
             background-color: var(--primary);
@@ -84,7 +116,7 @@
             text-transform: uppercase;
             margin-top: 15px;
         }
-        button:hover {
+        button.main-btn:hover {
             background-color: var(--primary-hover);
         }
         .status {
@@ -102,26 +134,50 @@
         <h1>Results Generator</h1>
         
         <div class="form-group">
-            <label>1. Header Texts</label>
+            <label class="section-title">1. Header Texts</label>
             <input type="text" id="dateText" placeholder="Event Date (e.g. 11th August 2026)">
             <input type="text" id="trackText" placeholder="Track Name (e.g. The Dunes)">
         </div>
 
         <div class="form-group">
-            <label>2. Main Screenshot (Creates Header)</label>
-            <input type="file" id="firstScreen" accept="image/*">
+            <label class="section-title">2. Main Screenshot (Creates Header)</label>
+            <div class="file-upload-wrapper">
+                <label class="custom-file-upload">
+                    <input type="file" id="firstScreen" accept="image/*" onchange="updateFileName('firstScreen', 'firstScreenName')">
+                    BROWSE
+                </label>
+                <span class="file-name" id="firstScreenName">No file chosen</span>
+            </div>
         </div>
 
         <div class="form-group">
-            <label>3. Additional Screenshots (Extends Table)</label>
-            <input type="file" id="otherScreens" accept="image/*" multiple>
+            <label class="section-title">3. Additional Screenshots (Extends Table)</label>
+            <div class="file-upload-wrapper">
+                <label class="custom-file-upload">
+                    <input type="file" id="otherScreens" accept="image/*" multiple onchange="updateFileName('otherScreens', 'otherScreensName')">
+                    BROWSE
+                </label>
+                <span class="file-name" id="otherScreensName">No files chosen</span>
+            </div>
         </div>
 
-        <button id="generateBtn" onclick="generateCollage()">GENERATE COLLAGE</button>
+        <button class="main-btn" id="generateBtn" onclick="generateCollage()">GENERATE COLLAGE</button>
         <div id="statusMsg" class="status"></div>
     </div>
 
     <script>
+        function updateFileName(inputId, textId) {
+            const input = document.getElementById(inputId);
+            const text = document.getElementById(textId);
+            if (input.files && input.files.length > 1) {
+                text.innerText = input.files.length + " files chosen";
+            } else if (input.files && input.files.length === 1) {
+                text.innerText = input.files[0].name;
+            } else {
+                text.innerText = "No file chosen";
+            }
+        }
+
         function loadImage(file) {
             return new Promise((resolve, reject) => {
                 if (!file) { resolve(null); return; }
@@ -163,12 +219,13 @@
                     otherImgs.push(await loadImage(file));
                 }
 
-                const cropLeft = 180;
-                const cropRight = 220;
+                // Ořezové hodnoty 
+                const cropLeft = 145; 
+                const cropRight = 185; 
                 const targetWidth = firstImg.width - cropLeft - cropRight;
                 
-                const yStartFirst = 130;
-                const yStartOther = 445;
+                const yStartFirst = 145; 
+                const yStartOther = 465; 
 
                 const firstImgHeight = firstImg.height - yStartFirst;
                 let totalHeight = firstImgHeight;
@@ -184,29 +241,29 @@
                 ctx.drawImage(firstImg, cropLeft, yStartFirst, targetWidth, firstImgHeight, 0, 0, targetWidth, firstImgHeight);
 
                 if (logoImg) {
-                    const logoSize = 190;
+                    const logoSize = 220;
                     ctx.drawImage(logoImg, 15, 10, logoSize, logoSize);
                 }
 
                 ctx.textAlign = "center";
                 ctx.lineJoin = "round";
                 ctx.miterLimit = 2;
-                ctx.lineWidth = 14; 
+                ctx.lineWidth = 16; 
                 ctx.strokeStyle = "black";
                 ctx.fillStyle = "white";
 
                 const centerX = targetWidth / 2;
 
                 if (dateText) {
-                    ctx.font = "70px 'Lilita One', sans-serif";
-                    ctx.strokeText(dateText, centerX, 85);
-                    ctx.fillText(dateText, centerX, 85);
+                    ctx.font = "95px 'Lilita One', sans-serif";
+                    ctx.strokeText(dateText, centerX, 100);
+                    ctx.fillText(dateText, centerX, 100);
                 }
 
                 if (trackText) {
-                    ctx.font = "60px 'Lilita One', sans-serif";
-                    ctx.strokeText(trackText, centerX, 165);
-                    ctx.fillText(trackText, centerX, 165);
+                    ctx.font = "80px 'Lilita One', sans-serif";
+                    ctx.strokeText(trackText, centerX, 195);
+                    ctx.fillText(trackText, centerX, 195);
                 }
 
                 let currentY = firstImgHeight;
@@ -235,4 +292,3 @@
     </script>
 </body>
 </html>
-
