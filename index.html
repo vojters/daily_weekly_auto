@@ -195,23 +195,24 @@
     <script>
         // ==========================================
         // CONFIGURATION (MANUAL TWEAKS)
+        // Set how many pixels to cut off from each side
         // ==========================================
         const CONFIG = {
-            // Horizontal coordinates (Asymmetrical Crop)
-            cropFromLeft: 480,       // Pixels to remove from the LEFT side (UI menu)
-            targetWidth: 2400,       // Final width (adjust if right side is too wide/narrow)
+            // Global side crops (applies to all screenshots)
+            cropLeft: 480,       // Pixels to remove from the LEFT
+            cropRight: 240,      // Pixels to remove from the RIGHT
 
-            // First Screenshot (Header)
-            firstScreenY: 240,       // Pixels to remove from the TOP
-            firstScreenHeight: 1200, // Height to keep (must reach the bottom of the table)
+            // First Screenshot (Header & First rows)
+            firstScreenCropTop: 240,    // Pixels to remove from the TOP
+            firstScreenCropBottom: 0,   // Pixels to remove from the BOTTOM
 
-            // Additional Screenshots (Rows)
-            otherScreenY: 660,       // Pixels to remove from the TOP (skips event banner)
-            otherScreenHeight: 780,  // Height to keep (rows of players)
+            // Additional Screenshots (Continuing rows)
+            otherScreenCropTop: 660,    // Pixels to remove from the TOP
+            otherScreenCropBottom: 0,   // Pixels to remove from the BOTTOM
 
-            // Text Placement
-            dateTextY: 100,          // Vertical position of the Date
-            trackTextY: 220,         // Vertical position of the Track Name
+            // Text Placement (Vertical position from the top of the final image)
+            dateTextY: 100,          
+            trackTextY: 220,         
 
             // Logo Details
             logoX: 30,
@@ -280,18 +281,30 @@
                     otherImgs.push(await loadImage(file));
                 }
                 
-                let totalHeight = CONFIG.firstScreenHeight;
+                // Calculate dimensions based on the crops
+                const targetWidth = firstImg.width - CONFIG.cropLeft - CONFIG.cropRight;
+                const firstScreenHeight = firstImg.height - CONFIG.firstScreenCropTop - CONFIG.firstScreenCropBottom;
+                
+                let totalHeight = firstScreenHeight;
+                const otherHeights = [];
+                
                 for (let i = 0; i < otherImgs.length; i++) {
-                    totalHeight += CONFIG.otherScreenHeight;
+                    const h = otherImgs[i].height - CONFIG.otherScreenCropTop - CONFIG.otherScreenCropBottom;
+                    otherHeights.push(h);
+                    totalHeight += h;
                 }
 
                 const canvas = document.createElement('canvas');
-                canvas.width = CONFIG.targetWidth;
+                canvas.width = targetWidth;
                 canvas.height = totalHeight;
                 const ctx = canvas.getContext('2d');
 
-                // Draw first screen (using cropFromLeft)
-                ctx.drawImage(firstImg, CONFIG.cropFromLeft, CONFIG.firstScreenY, CONFIG.targetWidth, CONFIG.firstScreenHeight, 0, 0, CONFIG.targetWidth, CONFIG.firstScreenHeight);
+                // Draw first screen
+                ctx.drawImage(
+                    firstImg, 
+                    CONFIG.cropLeft, CONFIG.firstScreenCropTop, targetWidth, firstScreenHeight, // Source
+                    0, 0, targetWidth, firstScreenHeight // Destination
+                );
 
                 // Draw logo
                 if (logoImg) {
@@ -306,7 +319,7 @@
                 ctx.strokeStyle = "black";
                 ctx.fillStyle = "white";
 
-                const centerX = CONFIG.targetWidth / 2;
+                const centerX = targetWidth / 2;
 
                 if (dateText) {
                     ctx.font = "140px 'Lilita One', sans-serif";
@@ -320,12 +333,17 @@
                     ctx.fillText(trackText, centerX, CONFIG.trackTextY);
                 }
 
-                // Draw other screens (using cropFromLeft)
-                let currentY = CONFIG.firstScreenHeight;
+                // Draw other screens
+                let currentY = firstScreenHeight;
                 for (let i = 0; i < otherImgs.length; i++) {
                     const img = otherImgs[i];
-                    ctx.drawImage(img, CONFIG.cropFromLeft, CONFIG.otherScreenY, CONFIG.targetWidth, CONFIG.otherScreenHeight, 0, currentY, CONFIG.targetWidth, CONFIG.otherScreenHeight);
-                    currentY += CONFIG.otherScreenHeight;
+                    const h = otherHeights[i];
+                    ctx.drawImage(
+                        img, 
+                        CONFIG.cropLeft, CONFIG.otherScreenCropTop, targetWidth, h, // Source
+                        0, currentY, targetWidth, h // Destination
+                    );
+                    currentY += h;
                 }
 
                 finalImageURL = canvas.toDataURL('image/jpeg', 0.92);
