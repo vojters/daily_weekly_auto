@@ -29,7 +29,7 @@
             border-radius: 12px;
             box-shadow: 0 8px 16px rgba(0,0,0,0.5);
             width: 100%;
-            max-width: 600px;
+            max-width: 700px;
         }
         h1 {
             text-align: center;
@@ -68,7 +68,6 @@
         input[type="text"]:last-child {
             margin-bottom: 0;
         }
-        
         input[type="file"] {
             display: none;
         }
@@ -101,23 +100,42 @@
             text-overflow: ellipsis;
             max-width: 250px;
         }
-
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
         button.main-btn {
-            width: 100%;
+            flex: 1;
             padding: 16px;
             background-color: var(--primary);
             color: #121212;
             border: none;
             border-radius: 6px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: 0.2s;
             text-transform: uppercase;
-            margin-top: 15px;
         }
-        button.main-btn:hover {
+        button.main-btn:hover:not(:disabled) {
             background-color: var(--primary-hover);
+        }
+        button:disabled {
+            background-color: #555;
+            color: #888;
+            cursor: not-allowed;
+        }
+        .preview-box {
+            margin-top: 25px;
+            text-align: center;
+            display: none;
+        }
+        .preview-box img {
+            max-width: 100%;
+            border-radius: 8px;
+            border: 2px solid #444;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
         }
         .status {
             margin-top: 15px;
@@ -161,11 +179,22 @@
             </div>
         </div>
 
-        <button class="main-btn" id="generateBtn" onclick="generateCollage()">GENERATE COLLAGE</button>
+        <div class="btn-group">
+            <button class="main-btn" id="generateBtn" onclick="generateCollage()">1. PREVIEW</button>
+            <button class="main-btn" id="downloadBtn" onclick="downloadCollage()" disabled>2. DOWNLOAD</button>
+        </div>
+        
         <div id="statusMsg" class="status"></div>
+
+        <div class="preview-box" id="previewContainer">
+            <label class="section-title">Preview</label>
+            <img id="previewImg" src="" alt="Collage Preview">
+        </div>
     </div>
 
     <script>
+        let finalImageURL = "";
+
         function updateFileName(inputId, textId) {
             const input = document.getElementById(inputId);
             const text = document.getElementById(textId);
@@ -199,10 +228,15 @@
 
         async function generateCollage() {
             const statusMsg = document.getElementById('statusMsg');
-            const btn = document.getElementById('generateBtn');
+            const genBtn = document.getElementById('generateBtn');
+            const dlBtn = document.getElementById('downloadBtn');
+            const previewContainer = document.getElementById('previewContainer');
+            const previewImg = document.getElementById('previewImg');
+
             statusMsg.style.color = '#aaaaaa';
-            statusMsg.innerText = 'Processing...';
-            btn.disabled = true;
+            statusMsg.innerText = 'Processing images...';
+            genBtn.disabled = true;
+            dlBtn.disabled = true;
 
             try {
                 const dateText = document.getElementById('dateText').value;
@@ -219,75 +253,102 @@
                     otherImgs.push(await loadImage(file));
                 }
 
-                // Ořezové hodnoty 
-                const cropLeft = 145; 
-                const cropRight = 185; 
-                const targetWidth = firstImg.width - cropLeft - cropRight;
+                // Updated dimensions based on 3120x1440 resolution
+                const TARGET_WIDTH = 2140;
+                const FIRST_HEIGHT = 1075;
+                const OTHER_HEIGHT = 800;
                 
-                const yStartFirst = 145; 
-                const yStartOther = 465; 
-
-                const firstImgHeight = firstImg.height - yStartFirst;
-                let totalHeight = firstImgHeight;
-
-                const otherImgHeights = otherImgs.map(img => img.height - yStartOther);
-                totalHeight += otherImgHeights.reduce((a, b) => a + b, 0);
+                // Center the crop horizontally
+                const cropLeft = (firstImg.width - TARGET_WIDTH) / 2;
+                
+                // Crop from the bottom up to ensure the table is captured perfectly
+                const yStartFirst = firstImg.height - FIRST_HEIGHT;
+                
+                let totalHeight = FIRST_HEIGHT;
+                const otherYStarts = [];
+                
+                for (let img of otherImgs) {
+                    const yStart = img.height - OTHER_HEIGHT;
+                    otherYStarts.push(yStart);
+                    totalHeight += OTHER_HEIGHT;
+                }
 
                 const canvas = document.createElement('canvas');
-                canvas.width = targetWidth;
+                canvas.width = TARGET_WIDTH;
                 canvas.height = totalHeight;
                 const ctx = canvas.getContext('2d');
 
-                ctx.drawImage(firstImg, cropLeft, yStartFirst, targetWidth, firstImgHeight, 0, 0, targetWidth, firstImgHeight);
+                // Draw header screen
+                ctx.drawImage(firstImg, cropLeft, yStartFirst, TARGET_WIDTH, FIRST_HEIGHT, 0, 0, TARGET_WIDTH, FIRST_HEIGHT);
 
+                // Draw Logo
                 if (logoImg) {
-                    const logoSize = 220;
-                    ctx.drawImage(logoImg, 15, 10, logoSize, logoSize);
+                    const logoSize = 300;
+                    ctx.drawImage(logoImg, 30, 20, logoSize, logoSize);
                 }
 
+                // Text settings for larger resolution
                 ctx.textAlign = "center";
                 ctx.lineJoin = "round";
                 ctx.miterLimit = 2;
-                ctx.lineWidth = 16; 
+                ctx.lineWidth = 22; 
                 ctx.strokeStyle = "black";
                 ctx.fillStyle = "white";
 
-                const centerX = targetWidth / 2;
+                const centerX = TARGET_WIDTH / 2;
 
                 if (dateText) {
-                    ctx.font = "95px 'Lilita One', sans-serif";
-                    ctx.strokeText(dateText, centerX, 100);
-                    ctx.fillText(dateText, centerX, 100);
+                    ctx.font = "130px 'Lilita One', sans-serif";
+                    ctx.strokeText(dateText, centerX, 150);
+                    ctx.fillText(dateText, centerX, 150);
                 }
 
                 if (trackText) {
-                    ctx.font = "80px 'Lilita One', sans-serif";
-                    ctx.strokeText(trackText, centerX, 195);
-                    ctx.fillText(trackText, centerX, 195);
+                    ctx.font = "100px 'Lilita One', sans-serif";
+                    ctx.strokeText(trackText, centerX, 270);
+                    ctx.fillText(trackText, centerX, 270);
                 }
 
-                let currentY = firstImgHeight;
+                // Draw additional screens
+                let currentY = FIRST_HEIGHT;
                 for (let i = 0; i < otherImgs.length; i++) {
                     const img = otherImgs[i];
-                    const h = otherImgHeights[i];
-                    ctx.drawImage(img, cropLeft, yStartOther, targetWidth, h, 0, currentY, targetWidth, h);
-                    currentY += h;
+                    const yStart = otherYStarts[i];
+                    ctx.drawImage(img, cropLeft, yStart, TARGET_WIDTH, OTHER_HEIGHT, 0, currentY, TARGET_WIDTH, OTHER_HEIGHT);
+                    currentY += OTHER_HEIGHT;
                 }
 
-                const link = document.createElement('a');
-                link.download = `Results_Collage.jpg`;
-                link.href = canvas.toDataURL('image/jpeg', 0.95);
-                link.click();
+                finalImageURL = canvas.toDataURL('image/jpeg', 0.92);
+                previewImg.src = finalImageURL;
+                previewContainer.style.display = 'block';
 
+                dlBtn.disabled = false;
                 statusMsg.style.color = '#4CAF50';
-                statusMsg.innerText = 'Success.';
+                statusMsg.innerText = 'Preview generated successfully.';
 
             } catch (error) {
                 statusMsg.style.color = '#f44336';
                 statusMsg.innerText = error.message;
             } finally {
-                btn.disabled = false;
+                genBtn.disabled = false;
             }
+        }
+
+        function downloadCollage() {
+            if (!finalImageURL) return;
+
+            const trackText = document.getElementById('trackText').value.trim();
+            
+            // Clean track name for safe filename
+            let safeName = trackText.replace(/[^a-zA-Z0-9]/g, '');
+            if (!safeName) safeName = 'Event';
+            
+            const fileName = safeName.substring(0, 15) + '.jpg';
+
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = finalImageURL;
+            link.click();
         }
     </script>
 </body>
