@@ -253,16 +253,14 @@
                     otherImgs.push(await loadImage(file));
                 }
 
-                // Updated dimensions based on 3120x1440 resolution
-                const TARGET_WIDTH = 2140;
-                const FIRST_HEIGHT = 1075;
-                const OTHER_HEIGHT = 800;
+                // Exact values for 3120x1440 resolution
+                const TARGET_WIDTH = 2360; 
+                const cropLeft = 380; 
                 
-                // Center the crop horizontally
-                const cropLeft = (firstImg.width - TARGET_WIDTH) / 2;
+                const FIRST_HEIGHT = 1200; 
+                const yStartFirst = firstImg.height - FIRST_HEIGHT; 
                 
-                // Crop from the bottom up to ensure the table is captured perfectly
-                const yStartFirst = firstImg.height - FIRST_HEIGHT;
+                const OTHER_HEIGHT = 780; 
                 
                 let totalHeight = FIRST_HEIGHT;
                 const otherYStarts = [];
@@ -278,38 +276,34 @@
                 canvas.height = totalHeight;
                 const ctx = canvas.getContext('2d');
 
-                // Draw header screen
                 ctx.drawImage(firstImg, cropLeft, yStartFirst, TARGET_WIDTH, FIRST_HEIGHT, 0, 0, TARGET_WIDTH, FIRST_HEIGHT);
 
-                // Draw Logo
                 if (logoImg) {
                     const logoSize = 300;
                     ctx.drawImage(logoImg, 30, 20, logoSize, logoSize);
                 }
 
-                // Text settings for larger resolution
                 ctx.textAlign = "center";
                 ctx.lineJoin = "round";
                 ctx.miterLimit = 2;
-                ctx.lineWidth = 22; 
+                ctx.lineWidth = 26; 
                 ctx.strokeStyle = "black";
                 ctx.fillStyle = "white";
 
                 const centerX = TARGET_WIDTH / 2;
 
                 if (dateText) {
-                    ctx.font = "130px 'Lilita One', sans-serif";
-                    ctx.strokeText(dateText, centerX, 150);
-                    ctx.fillText(dateText, centerX, 150);
+                    ctx.font = "140px 'Lilita One', sans-serif";
+                    ctx.strokeText(dateText, centerX, 130);
+                    ctx.fillText(dateText, centerX, 130);
                 }
 
                 if (trackText) {
-                    ctx.font = "100px 'Lilita One', sans-serif";
-                    ctx.strokeText(trackText, centerX, 270);
-                    ctx.fillText(trackText, centerX, 270);
+                    ctx.font = "110px 'Lilita One', sans-serif";
+                    ctx.strokeText(trackText, centerX, 260);
+                    ctx.fillText(trackText, centerX, 260);
                 }
 
-                // Draw additional screens
                 let currentY = FIRST_HEIGHT;
                 for (let i = 0; i < otherImgs.length; i++) {
                     const img = otherImgs[i];
@@ -339,7 +333,6 @@
 
             const trackText = document.getElementById('trackText').value.trim();
             
-            // Clean track name for safe filename
             let safeName = trackText.replace(/[^a-zA-Z0-9]/g, '');
             if (!safeName) safeName = 'Event';
             
